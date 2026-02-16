@@ -525,4 +525,3 @@ func diskWriter() {
 | Event size | ≤256 bytes | ✅ | HTTP 413 for >256 |
 
 Tried and Tested 
-See `REQUIREMENTS_PROOF.md` for detailed technical explanations.
