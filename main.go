@@ -104,8 +104,22 @@ type Server struct {
 	wal    *WAL
 }
 
+// addCORSHeaders adds CORS headers to allow dashboard access
+func addCORSHeaders(w http.ResponseWriter) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+}
+
 // handleEvents processes POST requests to /events
 func (s *Server) handleEvents(w http.ResponseWriter, r *http.Request) {
+	addCORSHeaders(w)
+	
+	// Handle preflight requests
+	if r.Method == http.MethodOptions {
+		w.WriteHeader(http.StatusOK)
+		return
+	}
 	// Only accept POST requests
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -147,12 +161,14 @@ func (s *Server) handleEvents(w http.ResponseWriter, r *http.Request) {
 
 // handleHealth provides a simple health check endpoint
 func (s *Server) handleHealth(w http.ResponseWriter, r *http.Request) {
+	addCORSHeaders(w)
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(`{"status":"healthy"}`))
 }
 
 // handleMetrics provides buffer and WAL statistics
 func (s *Server) handleMetrics(w http.ResponseWriter, r *http.Request) {
+	addCORSHeaders(w)
 	count, received, dropped := s.buffer.GetStats()
 	utilization := float64(count) / float64(s.buffer.size) * 100
 	

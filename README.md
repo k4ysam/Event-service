@@ -4,9 +4,11 @@ High-throughput event ingestion service built in Go - **79,026 events/sec** (158
 
 ## 📖 Quick Navigation
 
-Read **[PROOF_SUMMARY.md](PROOF_SUMMARY.md)** for complete verification of all requirements with proof
+**Prove all 5 requirements:** Run `go run test_all_requirements.go` (30 seconds)
 
-To run it, See [Quick Start](#quick-start) below
+**Read documentation:** See **[PROOF_SUMMARY.md](PROOF_SUMMARY.md)** for detailed verification
+
+**Run the service:** See [Quick Start](#quick-start) below
 
 ---
 
@@ -42,6 +44,8 @@ go run main.go wal.go
 ```
 
 Server will start on `http://localhost:8080` and create WAL files in `./data/`
+
+**Visual Dashboard:** Open `dashboard.html` in your browser for real-time monitoring and testing
 
 ### Test the Server
 
