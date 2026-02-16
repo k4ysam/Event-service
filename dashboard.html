@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event Ingestion Service - Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 20px;
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .card {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        
+        .card h2 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 18px;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+        
+        .metric {
+            display: flex;
+            justify-content: space-between;
+            margin: 10px 0;
+            padding: 8px;
+            background: #f5f5f5;
+            border-radius: 5px;
+        }
+        
+        .metric-label {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .metric-value {
+            color: #333;
+            font-weight: bold;
+            font-size: 16px;
+        }
+        
+        .metric-value.success {
+            color: #10b981;
+        }
+        
+        .metric-value.warning {
+            color: #f59e0b;
+        }
+        
+        .metric-value.error {
+            color: #ef4444;
+        }
+        
+        .status {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .status.online {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        
+        .status.offline {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        button:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .input-group {
+            margin: 15px 0;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #666;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        input, textarea {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e5e7eb;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+        
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+            font-family: monospace;
+        }
+        
+        .result {
+            margin-top: 15px;
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 14px;
+            display: none;
+        }
+        
+        .result.show {
+            display: block;
+        }
+        
+        .result.success {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        
+        .result.error {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: #e5e7eb;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .button-group button {
+            flex: 1;
+        }
+        
+        .footer {
+            text-align: center;
+            color: white;
+            margin-top: 20px;
+            font-size: 14px;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .loading {
+            animation: pulse 1.5s infinite;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 Event Ingestion Service Dashboard</h1>
+            <p class="subtitle">Real-time monitoring and testing interface</p>
+            <div style="margin-top: 15px;">
+                <span id="serverStatus" class="status offline">Offline</span>
+                <span style="margin-left: 10px; color: #666; font-size: 14px;" id="lastUpdate">Last updated: Never</span>
+            </div>
+        </div>
+
+        <div class="grid">
+            <!-- Server Metrics -->
+            <div class="card">
+                <h2>📊 Server Metrics</h2>
+                <div class="metric">
+                    <span class="metric-label">Events Received</span>
+                    <span class="metric-value success" id="eventsReceived">0</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Events Dropped</span>
+                    <span class="metric-value" id="eventsDropped">0</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Buffer Current</span>
+                    <span class="metric-value" id="bufferCurrent">0</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Buffer Capacity</span>
+                    <span class="metric-value" id="bufferCapacity">100000</span>
+                </div>
+            </div>
+
+            <!-- WAL Metrics -->
+            <div class="card">
+                <h2>💾 WAL Statistics</h2>
+                <div class="metric">
+                    <span class="metric-label">Events Written</span>
+                    <span class="metric-value success" id="walEvents">0</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Bytes Written</span>
+                    <span class="metric-value" id="walBytes">0</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Fsync Count</span>
+                    <span class="metric-value" id="walFsync">0</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Current Segment</span>
+                    <span class="metric-value" id="walSegment">1</span>
+                </div>
+            </div>
+
+            <!-- Buffer Utilization -->
+            <div class="card">
+                <h2>📈 Buffer Utilization</h2>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="bufferProgress" style="width: 0%">
+                        0%
+                    </div>
+                </div>
+                <div style="margin-top: 15px; text-align: center; color: #666; font-size: 14px;">
+                    <span id="bufferStatus">Buffer is empty</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid">
+            <!-- Send Event Form -->
+            <div class="card">
+                <h2>📤 Send Event</h2>
+                <div class="input-group">
+                    <label for="eventData">Event Data (JSON)</label>
+                    <textarea id="eventData" placeholder='{"message": "Hello, World!", "timestamp": 1234567890}'>{
+  "user_id": 123,
+  "action": "click",
+  "timestamp": 1708012345
+}</textarea>
+                </div>
+                <button onclick="sendEvent()" id="sendBtn">Send Event</button>
+                <div id="sendResult" class="result"></div>
+            </div>
+
+            <!-- Load Test -->
+            <div class="card">
+                <h2>🔥 Load Test</h2>
+                <div class="input-group">
+                    <label for="numEvents">Number of Events</label>
+                    <input type="number" id="numEvents" value="1000" min="1" max="100000">
+                </div>
+                <div class="button-group">
+                    <button onclick="startLoadTest()" id="loadTestBtn">Start Load Test</button>
+                    <button onclick="stopLoadTest()" id="stopBtn" style="background: #ef4444;" disabled>Stop</button>
+                </div>
+                <div id="loadTestResult" class="result"></div>
+                <div id="loadTestProgress" style="display: none; margin-top: 15px;">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="loadProgress" style="width: 0%">0%</div>
+                    </div>
+                    <div style="margin-top: 10px; text-align: center; color: #666; font-size: 14px;">
+                        <span id="loadStats">0 / 0 events sent</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>Event Ingestion Service - 79,026 events/sec capable 🎯</p>
+            <p style="margin-top: 5px; font-size: 12px;">Auto-refreshing metrics every 2 seconds</p>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8080';
+        let loadTestRunning = false;
+        let loadTestAborted = false;
+
+        // Format large numbers
+        function formatNumber(num) {
+            if (num >= 1000000) return (num / 1000000).toFixed(2) + 'M';
+            if (num >= 1000) return (num / 1000).toFixed(2) + 'K';
+            return num.toString();
+        }
+
+        // Format bytes
+        function formatBytes(bytes) {
+            if (bytes >= 1073741824) return (bytes / 1073741824).toFixed(2) + ' GB';
+            if (bytes >= 1048576) return (bytes / 1048576).toFixed(2) + ' MB';
+            if (bytes >= 1024) return (bytes / 1024).toFixed(2) + ' KB';
+            return bytes + ' B';
+        }
+
+        // Fetch metrics
+        async function fetchMetrics() {
+            try {
+                const response = await fetch(`${API_BASE}/metrics`);
+                if (!response.ok) throw new Error('Server not responding');
+                
+                const data = await response.json();
+                
+                // Update server status
+                document.getElementById('serverStatus').textContent = 'Online';
+                document.getElementById('serverStatus').className = 'status online';
+                
+                // Update metrics
+                document.getElementById('eventsReceived').textContent = formatNumber(data.events_received);
+                document.getElementById('eventsDropped').textContent = formatNumber(data.events_dropped);
+                document.getElementById('eventsDropped').className = data.events_dropped > 0 ? 'metric-value error' : 'metric-value';
+                
+                document.getElementById('bufferCurrent').textContent = formatNumber(data.buffer_current);
+                document.getElementById('bufferCapacity').textContent = formatNumber(data.buffer_capacity);
+                
+                document.getElementById('walEvents').textContent = formatNumber(data.wal_events_written);
+                document.getElementById('walBytes').textContent = formatBytes(data.wal_bytes_written);
+                document.getElementById('walFsync').textContent = formatNumber(data.wal_fsync_count);
+                document.getElementById('walSegment').textContent = data.wal_current_segment;
+                
+                // Update buffer progress
+                const utilization = (data.buffer_current / data.buffer_capacity) * 100;
+                const progressBar = document.getElementById('bufferProgress');
+                progressBar.style.width = utilization + '%';
+                progressBar.textContent = utilization.toFixed(1) + '%';
+                
+                let statusText = 'Buffer is empty';
+                if (utilization > 80) {
+                    statusText = '⚠️ Buffer is nearly full!';
+                    progressBar.style.background = 'linear-gradient(90deg, #ef4444 0%, #dc2626 100%)';
+                } else if (utilization > 50) {
+                    statusText = 'Buffer is filling up';
+                    progressBar.style.background = 'linear-gradient(90deg, #f59e0b 0%, #d97706 100%)';
+                } else if (utilization > 0) {
+                    statusText = 'Buffer has events';
+                    progressBar.style.background = 'linear-gradient(90deg, #667eea 0%, #764ba2 100%)';
+                } else {
+                    progressBar.style.background = 'linear-gradient(90deg, #10b981 0%, #059669 100%)';
+                }
+                document.getElementById('bufferStatus').textContent = statusText;
+                
+                // Update timestamp
+                const now = new Date().toLocaleTimeString();
+                document.getElementById('lastUpdate').textContent = `Last updated: ${now}`;
+                
+            } catch (error) {
+                document.getElementById('serverStatus').textContent = 'Offline';
+                document.getElementById('serverStatus').className = 'status offline';
+                console.error('Failed to fetch metrics:', error);
+            }
+        }
+
+        // Send single event
+        async function sendEvent() {
+            const btn = document.getElementById('sendBtn');
+            const result = document.getElementById('sendResult');
+            const data = document.getElementById('eventData').value;
+            
+            btn.disabled = true;
+            result.className = 'result';
+            result.style.display = 'none';
+            
+            try {
+                // Parse and validate JSON
+                const jsonData = JSON.parse(data);
+                const payload = { data: jsonData };
+                const payloadStr = JSON.stringify(payload);
+                
+                if (payloadStr.length > 256) {
+                    throw new Error(`Event too large: ${payloadStr.length} bytes (max 256)`);
+                }
+                
+                const response = await fetch(`${API_BASE}/events`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: payloadStr
+                });
+                
+                if (response.status === 202) {
+                    result.className = 'result success show';
+                    result.textContent = `✅ Event accepted (${payloadStr.length} bytes)`;
+                } else if (response.status === 413) {
+                    result.className = 'result error show';
+                    result.textContent = '❌ Event too large (max 256 bytes)';
+                } else if (response.status === 503) {
+                    result.className = 'result error show';
+                    result.textContent = '❌ Buffer full - try again later';
+                } else {
+                    result.className = 'result error show';
+                    result.textContent = `❌ Error: ${response.status} ${response.statusText}`;
+                }
+                
+                fetchMetrics();
+            } catch (error) {
+                result.className = 'result error show';
+                result.textContent = `❌ Error: ${error.message}`;
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        // Load test
+        async function startLoadTest() {
+            const btn = document.getElementById('loadTestBtn');
+            const stopBtn = document.getElementById('stopBtn');
+            const result = document.getElementById('loadTestResult');
+            const progress = document.getElementById('loadTestProgress');
+            const numEvents = parseInt(document.getElementById('numEvents').value);
+            
+            btn.disabled = true;
+            stopBtn.disabled = false;
+            loadTestRunning = true;
+            loadTestAborted = false;
+            result.className = 'result';
+            result.style.display = 'none';
+            progress.style.display = 'block';
+            
+            const startTime = Date.now();
+            let sent = 0;
+            let success = 0;
+            let dropped = 0;
+            let failed = 0;
+            
+            try {
+                for (let i = 0; i < numEvents && !loadTestAborted; i++) {
+                    const event = {
+                        data: {
+                            test_id: i,
+                            timestamp: Date.now(),
+                            message: 'Load test event'
+                        }
+                    };
+                    
+                    try {
+                        const response = await fetch(`${API_BASE}/events`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(event)
+                        });
+                        
+                        if (response.status === 202) success++;
+                        else if (response.status === 503) dropped++;
+                        else failed++;
+                    } catch {
+                        failed++;
+                    }
+                    
+                    sent++;
+                    
+                    // Update progress every 100 events
+                    if (sent % 100 === 0 || sent === numEvents) {
+                        const pct = (sent / numEvents * 100).toFixed(1);
+                        document.getElementById('loadProgress').style.width = pct + '%';
+                        document.getElementById('loadProgress').textContent = pct + '%';
+                        document.getElementById('loadStats').textContent = 
+                            `${sent} / ${numEvents} events sent (${success} success, ${dropped} dropped, ${failed} failed)`;
+                    }
+                }
+                
+                const duration = (Date.now() - startTime) / 1000;
+                const rate = (success / duration).toFixed(0);
+                
+                result.className = loadTestAborted ? 'result error show' : 'result success show';
+                result.textContent = loadTestAborted 
+                    ? `⚠️ Test aborted: ${success} events sent in ${duration.toFixed(2)}s`
+                    : `✅ Test complete: ${success} events sent in ${duration.toFixed(2)}s (~${rate} events/sec)`;
+                
+                fetchMetrics();
+            } catch (error) {
+                result.className = 'result error show';
+                result.textContent = `❌ Error: ${error.message}`;
+            } finally {
+                btn.disabled = false;
+                stopBtn.disabled = true;
+                loadTestRunning = false;
+            }
+        }
+
+        function stopLoadTest() {
+            loadTestAborted = true;
+            document.getElementById('stopBtn').disabled = true;
+        }
+
+        // Auto-refresh metrics
+        setInterval(fetchMetrics, 2000);
+        fetchMetrics();
+    </script>
+</body>
+</html>
