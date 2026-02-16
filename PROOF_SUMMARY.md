@@ -524,6 +524,5 @@ func diskWriter() {
 | Non-blocking I/O | Yes | ✅ | <1ms latency (disk=5-10ms) |
 | Event size | ≤256 bytes | ✅ | HTTP 413 for >256 |
 
-**All verified with live testing on your PC!**
-
+Tried and Tested 
 See `REQUIREMENTS_PROOF.md` for detailed technical explanations.
